@@ -1,0 +1,42 @@
+import { ApiError, type Attachment, type DraftPayload, type Mailbox, type Message, type MessagePage, type Session } from './types'
+
+const now = Date.now()
+const hours = (h: number) => new Date(now - h * 3600000).toISOString()
+let signedIn = false
+let user = 'alex@example.com'
+let mailboxes: Mailbox[] = [
+  { id: 'inbox', name: 'Inbox', role: 'inbox', unreadCount: 3, totalCount: 6 },
+  { id: 'sent', name: 'Sent', role: 'sent', unreadCount: 0, totalCount: 2 },
+  { id: 'drafts', name: 'Drafts', role: 'drafts', unreadCount: 0, totalCount: 1 },
+  { id: 'junk', name: 'Junk', role: 'junk', unreadCount: 0, totalCount: 0 },
+  { id: 'trash', name: 'Trash', role: 'trash', unreadCount: 0, totalCount: 0 },
+]
+let messages: Message[] = [
+  { id: 'm1', mailboxIds: ['inbox'], from: [{name:'Olivia Parker',email:'olivia@northstar.studio'}], to:[{email:user}], subject:'Design review for Thursday', preview:'Hi Alex, I’ve shared the latest concepts for your review.', receivedAt:hours(1), isRead:false, hasAttachment:true, bodyText:'Hi Alex,\n\nI’ve shared the latest concepts for your review. The updated direction feels a lot closer to what we discussed last week.\n\nCould you take a look before our call on Thursday? I’d love to hear what stands out to you and anything you’d like us to refine.\n\nThanks,\nOlivia', attachments:[{id:'a1',name:'Brand-concepts.pdf',type:'application/pdf',size:2480000}] },
+  { id: 'm2', mailboxIds: ['inbox'], from: [{name:'Daniel Kim',email:'daniel@aperture.co'}], to:[{email:user}], subject:'Re: Partnership details', preview:'Thanks for sending this over. The timeline looks good to us.', receivedAt:hours(3), isRead:false, hasAttachment:false, bodyText:'Hi Alex,\n\nThanks for sending this over. The timeline looks good to us. We can move forward with the next steps whenever you’re ready.\n\nBest,\nDaniel', attachments:[] },
+  { id: 'm3', mailboxIds: ['inbox'], from: [{name:'Maya Chen',email:'maya@studioform.co'}], to:[{email:user}], subject:'Your files are ready', preview:'Everything is packaged up and ready for download.', receivedAt:hours(7), isRead:false, hasAttachment:true, bodyText:'Hi Alex,\n\nEverything is packaged up and ready for download. Let me know if you need another format.\n\nMaya', attachments:[{id:'a2',name:'Final-assets.zip',type:'application/zip',size:6800000}] },
+  { id: 'm4', mailboxIds: ['inbox'], from: [{name:'Sophie Moore',email:'sophie@kindred.io'}], to:[{email:user}], subject:'Following up on our conversation', preview:'It was lovely speaking with you yesterday.', receivedAt:hours(26), isRead:true, hasAttachment:false, bodyText:'Hi Alex,\n\nIt was lovely speaking with you yesterday. I’ll send over a few ideas early next week.\n\nSophie', attachments:[] },
+  { id: 'm5', mailboxIds: ['inbox'], from: [{name:'Noah Williams',email:'noah@fieldnotes.design'}], to:[{email:user}], subject:'A few notes from the workshop', preview:'Here are the notes and action items we captured.', receivedAt:hours(49), isRead:true, hasAttachment:false, bodyText:'Hey Alex,\n\nHere are the notes and action items we captured. It was a productive session.\n\nCheers,\nNoah', attachments:[] },
+  { id: 'm6', mailboxIds: ['inbox'], from: [{name:'Muditam Mail Team',email:'hello@example.com'}], to:[{email:user}], subject:'Welcome to your new inbox', preview:'A quieter place for the conversations that matter.', receivedAt:hours(80), isRead:true, hasAttachment:false, bodyText:'Welcome to your new inbox.\n\nA quieter place for the conversations that matter.\n\n— The Muditam Mail Team', attachments:[] },
+  { id: 'm7', mailboxIds: ['sent'], from:[{email:user}], to:[{name:'Olivia Parker',email:'olivia@northstar.studio'}], subject:'Re: Initial concepts', preview:'These are looking great. I have a few thoughts to share.', receivedAt:hours(30), isRead:true, hasAttachment:false, bodyText:'Hi Olivia,\n\nThese are looking great. I have a few thoughts to share.\n\nAlex', attachments:[] },
+  { id: 'm8', mailboxIds: ['sent'], from:[{email:user}], to:[{name:'Daniel Kim',email:'daniel@aperture.co'}], subject:'Partnership details', preview:'Here’s the outline we discussed.', receivedAt:hours(52), isRead:true, hasAttachment:false, bodyText:'Hi Daniel,\n\nHere’s the outline we discussed.\n\nAlex', attachments:[] },
+  { id: 'd1', mailboxIds: ['drafts'], from:[{email:user}], to:[{email:'hello@kinfolk.co'}], subject:'Introduction', preview:'Hi there, I wanted to reach out...', receivedAt:hours(4), isRead:true, hasAttachment:false, bodyText:'Hi there,\n\nI wanted to reach out...', attachments:[] },
+]
+let next = 10
+const ensure = () => { if (!signedIn) throw new ApiError('SESSION_EXPIRED', 'Please sign in again.', 401) }
+const session = (): Session => ({ user: { email:user, displayName:'Alex Morgan' }, csrfToken:'mock-csrf' })
+const delay = async () => new Promise(resolve => setTimeout(resolve, 260))
+export const mockApi = {
+  async session() { await delay(); ensure(); return session() },
+  async login(email: string, password: string) { await delay(); if (!email || !password) throw new ApiError('INVALID_CREDENTIALS','Email or password is incorrect.',401); user=email; signedIn=true; return session() },
+  async logout() { signedIn=false; await delay() },
+  async mailboxes() { ensure(); await delay(); return structuredClone(mailboxes) },
+  async messages(mailboxId: string, cursor?: string): Promise<MessagePage> { ensure(); await delay(); const all=messages.filter(m=>m.mailboxIds.includes(mailboxId)).sort((a,b)=>b.receivedAt.localeCompare(a.receivedAt)); const start=Number(cursor||0); return {messages:structuredClone(all.slice(start,start+30)),nextCursor:all.length>start+30?String(start+30):undefined} },
+  async message(id: string) { ensure(); await delay(); const found=messages.find(m=>m.id===id); if(!found) throw new ApiError('MESSAGE_NOT_FOUND','Message not found.',404); return structuredClone(found) },
+  async read(id:string,isRead:boolean) { ensure(); const m=messages.find(m=>m.id===id); if(!m) throw new ApiError('MESSAGE_NOT_FOUND','Message not found.',404); m.isRead=isRead; mailboxes=mailboxes.map(box=>box.id==='inbox'?{...box,unreadCount:messages.filter(x=>x.mailboxIds.includes('inbox')&&!x.isRead).length}:box); return {id,isRead} },
+  async upload(file:File,onProgress?: (percent:number)=>void) { ensure(); onProgress?.(100); await delay(); return {id:`a${next++}`,name:file.name,type:file.type||'application/octet-stream',size:file.size} },
+  async download(attachment:Attachment) { ensure(); const blob=new Blob([`Preview fixture for ${attachment.name}`],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=attachment.name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000) },
+  async saveDraft(payload:DraftPayload) { ensure(); await delay(); const id=payload.draftId||`d${next++}`; const existing=messages.findIndex(m=>m.id===id); const draft:Message={id,mailboxIds:['drafts'],from:[{email:user}],to:payload.to.map(email=>({email})),cc:payload.cc?.map(email=>({email})),subject:payload.subject,preview:payload.bodyText.slice(0,90),receivedAt:new Date().toISOString(),bodyText:payload.bodyText,isRead:true,hasAttachment:payload.attachmentIds.length>0,attachments:payload.attachmentIds.map(id=>({id,name:'Attachment',type:'application/octet-stream',size:0}))}; if(existing>=0) messages[existing]=draft; else messages.unshift(draft); mailboxes=mailboxes.map(b=>b.id==='drafts'?{...b,totalCount:messages.filter(m=>m.mailboxIds.includes('drafts')).length}:b); return {draftId:id} },
+  async deleteDraft(id:string) { ensure(); await delay(); messages=messages.filter(m=>m.id!==id); mailboxes=mailboxes.map(b=>b.id==='drafts'?{...b,totalCount:messages.filter(m=>m.mailboxIds.includes('drafts')).length}:b) },
+  async send(payload:DraftPayload) { ensure(); await delay(); if(payload.draftId) messages=messages.filter(m=>m.id!==payload.draftId); const id=`m${next++}`; messages.unshift({id,mailboxIds:['sent'],from:[{email:user}],to:payload.to.map(email=>({email})),cc:payload.cc?.map(email=>({email})),subject:payload.subject,preview:payload.bodyText.slice(0,90),receivedAt:new Date().toISOString(),bodyText:payload.bodyText,isRead:true,hasAttachment:payload.attachmentIds.length>0,attachments:[]}); mailboxes=mailboxes.map(b=>({...b,totalCount:messages.filter(m=>m.mailboxIds.includes(b.id)).length})); return {submissionId:`s${next++}`,status:'queued' as const} },
+}

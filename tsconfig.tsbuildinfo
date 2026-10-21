@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.test.ts","./src/api.ts","./src/mailboxroutes.test.ts","./src/mailboxroutes.ts","./src/main.tsx","./src/mockapi.ts","./src/refreshpolicy.test.ts","./src/refreshpolicy.ts","./src/types.ts","./src/vite-env.d.ts","./vite.config.ts"],"version":"5.9.3"}
