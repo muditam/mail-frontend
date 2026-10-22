@@ -10,7 +10,7 @@ export const draftSeedFromMessage = (message: Message) => ({
   attachments: message.attachments,
 })
 
-export const queuedSendNotice = 'Message queued for sending.'
+export const sendSuccessNotice = 'Message sent.'
 
 export function createAttachmentQueue(limit = 10) {
   let nextId = 0

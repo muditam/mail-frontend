@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createAttachmentQueue, draftSeedFromMessage, queuedSendNotice } from './composeState'
+import { createAttachmentQueue, draftSeedFromMessage, sendSuccessNotice } from './composeState'
 import type { Message } from './types'
 
 describe('composer regressions', () => {
@@ -8,9 +8,8 @@ describe('composer regressions', () => {
     expect(draftSeedFromMessage(draft).bcc).toBe('hidden@example.com')
   })
 
-  it('describes an accepted submission as queued', () => {
-    expect(queuedSendNotice).toMatch(/queued/i)
-    expect(queuedSendNotice).not.toMatch(/sent/i)
+  it('shows the requested success confirmation after submission', () => {
+    expect(sendSuccessNotice).toBe('Message sent.')
   })
 
   it('counts pending uploads across overlapping selections and allows a retry after failure', () => {
