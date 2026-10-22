@@ -1,3 +1,5 @@
+import { routes } from '@vercel/config/v1'
+
 const backendBaseUrl = process.env.BACKEND_BASE_URL
 const apiBase = process.env.VITE_API_BASE_URL
 
@@ -6,13 +8,13 @@ const backend = new URL(backendBaseUrl)
 if (backend.protocol !== 'https:' || backend.pathname !== '/' || backend.search || backend.hash) {
   throw new Error('BACKEND_BASE_URL must be an HTTPS origin without a path')
 }
-if (!apiBase || !/^\/(?!\/)[a-zA-Z0-9/_-]+$/.test(apiBase) || apiBase.endsWith('/')) {
-  throw new Error('VITE_API_BASE_URL must be a same-origin path without a trailing slash')
+if (apiBase !== '/api/app/v1') {
+  throw new Error('VITE_API_BASE_URL must match the backend API path /api/app/v1')
 }
 
 export const config = {
   rewrites: [
-    { source: `${apiBase}/:path*`, destination: `${backend.origin}${apiBase}/:path*` },
-    { source: '/(.*)', destination: '/index.html' },
+    routes.rewrite('/api/app/v1/:path*', `${backend.origin}/api/app/v1/:path*`),
+    routes.rewrite('/(.*)', '/index.html'),
   ],
 }
