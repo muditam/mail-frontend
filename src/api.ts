@@ -53,6 +53,7 @@ const liveApi = {
     const blob = await response.blob(); const url = URL.createObjectURL(blob)
     const link = document.createElement('a'); link.href = url; link.download = attachment.name; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000)
   },
+  report: (id: string) => request<{status: 'queued'; submissionId: string}>(`/messages/${encodeURIComponent(id)}/report`, { method: 'POST', body: '{}' }),
   saveDraft: (payload: DraftPayload) => request<{draftId: string}>('/drafts', { method: 'POST', body: JSON.stringify(payload) }),
   deleteDraft: (id: string) => request<void>(`/drafts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   send: (payload: DraftPayload) => request<{submissionId: string; status: 'queued'}>('/messages/send', { method: 'POST', body: JSON.stringify(payload) }),

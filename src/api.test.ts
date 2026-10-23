@@ -36,3 +36,22 @@ describe('frontend contract', () => {
     await expect(api.session()).rejects.toBeInstanceOf(ApiError)
   })
 })
+
+describe('metadata-only IT reporting',()=>{
+  it('posts only an empty body with cookies and CSRF to the encoded message endpoint',async()=>{
+    setCsrfToken('report-csrf')
+    const fetch=vi.fn().mockResolvedValue(new Response(JSON.stringify({status:'queued',submissionId:'report-1'}),{status:202}))
+    vi.stubGlobal('fetch',fetch)
+    await expect(api.report('message/1')).resolves.toEqual({status:'queued',submissionId:'report-1'})
+    const [url,options]=fetch.mock.calls[0]
+    expect(url).toBe('/api/app/v1/messages/message%2F1/report')
+    expect(options.method).toBe('POST')
+    expect(options.body).toBe('{}')
+    expect(options.credentials).toBe('include')
+    expect(new Headers(options.headers).get('X-CSRF-Token')).toBe('report-csrf')
+  })
+  it('propagates reporting failure so the UI can offer retry',async()=>{
+    vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({error:{code:'UPSTREAM_UNAVAILABLE',message:'Report unavailable'}}),{status:503})))
+    await expect(api.report('message-1')).rejects.toMatchObject({status:503,message:'Report unavailable'})
+  })
+})
