@@ -35,6 +35,7 @@ const liveApi = {
   messages: (mailboxId: string, cursor?: string) => request<MessagePage>(`/messages?${new URLSearchParams({ mailboxId, limit: '30', ...(cursor ? { cursor } : {}) })}`),
   message: async (id: string) => (await request<{message: Message}>(`/messages/${encodeURIComponent(id)}`)).message,
   read: async (id: string, isRead: boolean) => (await request<{message: {id: string; isRead: boolean}}>(`/messages/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ isRead }) })).message,
+  moveMessage: async (id: string, action: 'trash'|'restore') => (await request<{message: {id: string; mailboxIds: string[]}}>(`/messages/${encodeURIComponent(id)}/move`, { method: 'POST', body: JSON.stringify({action}) })).message,
   upload: async (file: File, onProgress?: (percent: number) => void): Promise<Attachment> => {
     const data = new FormData(); data.append('file', file)
     // XMLHttpRequest exposes upload progress and still sends the session cookie.
