@@ -32,9 +32,10 @@ const liveApi = {
   login: (email: string, password: string) => request<Session>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   mailboxes: async () => (await request<{mailboxes: Mailbox[]}>('/mailboxes')).mailboxes,
-  messages: (mailboxId?: string, cursor?: string, q?: string, signal?: AbortSignal) => request<MessagePage>(`/messages?${new URLSearchParams({ ...(mailboxId ? {mailboxId} : {}), limit: '30', ...(cursor ? { cursor } : {}), ...(q ? {q} : {}) })}`, {signal}),
+  messages: (mailboxId?: string, cursor?: string, q?: string, signal?: AbortSignal, starred?: boolean) => request<MessagePage>(`/messages?${new URLSearchParams({ ...(mailboxId ? {mailboxId} : {}), limit: '30', ...(cursor ? { cursor } : {}), ...(q ? {q} : {}), ...(starred ? {starred:'true'} : {}) })}`, {signal}),
   message: async (id: string) => (await request<{message: Message}>(`/messages/${encodeURIComponent(id)}`)).message,
   read: async (id: string, isRead: boolean) => (await request<{message: {id: string; isRead: boolean}}>(`/messages/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ isRead }) })).message,
+  star: async (id: string, isStarred: boolean) => (await request<{message:{id:string;isStarred:boolean}}>(`/messages/${encodeURIComponent(id)}/star`, {method:'PATCH',body:JSON.stringify({isStarred})})).message,
   moveMessage: async (id: string, action: 'trash'|'restore') => (await request<{message: {id: string; mailboxIds: string[]}}>(`/messages/${encodeURIComponent(id)}/move`, { method: 'POST', body: JSON.stringify({action}) })).message,
   upload: async (file: File, onProgress?: (percent: number) => void): Promise<Attachment> => {
     const data = new FormData(); data.append('file', file)
