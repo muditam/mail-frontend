@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import type { MessageSafety } from './types'
-import { externalWarning, isVerifiedInternal } from './messageSafety'
+import { externalWarning, isInternalSender } from './messageSafety'
 
 export function MessageSafetyControls({safety,trusted,onTrust,report}:{safety?:MessageSafety;trusted:boolean;onTrust:()=>void;report:()=>Promise<{status:'queued';submissionId:string}>}) {
   const [reportState,setReportState]=useState<'idle'|'sending'|'sent'|'failed'>('idle')
-  const guarded=!isVerifiedInternal(safety)
+  const guarded=!isInternalSender(safety)
   const suspicious=safety?.classification!=='external'
   const sendReport=async()=>{
     setReportState('sending')
@@ -13,9 +13,8 @@ export function MessageSafetyControls({safety,trusted,onTrust,report}:{safety?:M
   }
   return <div className="message-safety">
     {guarded&&<div className="sender-warning" role="alert">
-      {suspicious&&<strong>Possible spoofed sender: sender authentication is missing or unverified. Treat this message as suspicious.</strong>}
-      {safety?.spam&&<strong>This message was flagged as spam.</strong>}
-      <p>{externalWarning}</p>
+      {suspicious&&<strong>The sender domain could not be determined. Be cautious with this message.</strong>}
+      <p>{suspicious ? 'Only open links or download attachments if you recognize the sender. Otherwise, report this message to IT.' : externalWarning}</p>
       {!trusted?<button className="secondary" onClick={onTrust}>I trust this sender — enable attachment downloads</button>:<p>Attachment downloads enabled for this message.</p>}
     </div>}
     <button className="secondary report-button" disabled={reportState==='sending'||reportState==='sent'} onClick={sendReport}>{reportState==='sending'?'Reporting…':'Report to IT'}</button>

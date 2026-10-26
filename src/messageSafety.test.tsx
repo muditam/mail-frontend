@@ -5,12 +5,12 @@ import { downloadsAllowed, externalWarning } from './messageSafety'
 import { Reader } from './App'
 import type { Message, MessageSafety } from './types'
 
-const internal:MessageSafety={classification:'internal',fromDomain:'muditam.com',authentication:'aligned',spam:false}
+const internal:MessageSafety={classification:'internal',fromDomain:'muditam.com'}
 const render=(safety?:MessageSafety,trusted=false)=>renderToStaticMarkup(<MessageSafetyControls safety={safety} trusted={trusted} onTrust={()=>{}} report={async()=>({status:'queued',submissionId:'1'})}/> )
 describe('message sender safety',()=>{
-  it('unlocks only a complete authenticated internal verdict by default',()=>{
+  it('unlocks an internal domain verdict without authentication fields',()=>{
     expect(downloadsAllowed(internal,false)).toBe(true)
-    for(const safety of [undefined,{...internal,classification:'external' as const},{...internal,classification:'suspicious' as const},{...internal,authentication:'unverified' as const},{...internal,spam:true},{...internal,fromDomain:null}]){
+    for(const safety of [undefined,{...internal,classification:'external' as const},{...internal,classification:'suspicious' as const},{...internal,fromDomain:null}]){
       expect(downloadsAllowed(safety,false)).toBe(false)
       expect(downloadsAllowed(safety,true)).toBe(true)
     }
@@ -23,8 +23,8 @@ describe('message sender safety',()=>{
     expect(render(safety,true)).toContain('Attachment downloads enabled')
   })
   it('warns more strongly for suspicious or missing data',()=>{
-    expect(render()).toContain('Possible spoofed sender')
-    expect(render({...internal,classification:'suspicious'})).toContain('Possible spoofed sender')
+    expect(render()).toContain('The sender domain could not be determined')
+    expect(render({...internal,classification:'suspicious'})).toContain('The sender domain could not be determined')
     expect(render(internal)).not.toContain(externalWarning)
     expect(render(internal)).toContain('Report to IT')
   })
@@ -36,5 +36,5 @@ describe('message sender safety',()=>{
    expect(html).toMatch(/class="attachment-chip" disabled=""/)
    expect(html).not.toContain('<a ')
    expect(html).toContain('&lt;a href=')
-   expect(html).toContain(externalWarning)
+   expect(html).toContain('The sender domain could not be determined')
  })
