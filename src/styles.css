@@ -20,3 +20,39 @@
 .logout-dialog .logout-dialog-error{color:#a54846;margin-top:13px}
 .logout-dialog-actions{display:flex;gap:10px;margin-top:26px}
 .logout-dialog-actions button{flex:1;min-height:40px;padding:0 10px;font-size:12px;white-space:nowrap}
+
+.mail-search{margin-top:16px}.mail-search-input{display:flex;align-items:center;gap:8px;border:1px solid #dce5f2;border-radius:8px;padding:0 10px;color:#7185a0;background:#fff}.mail-search-input:focus-within{outline:2px solid #8ab3f5;outline-offset:2px}.mail-search-input input{width:100%;min-width:0;border:0;background:transparent;padding:10px 0;color:#203856;font:inherit;font-size:12px;outline:none;box-shadow:none}.mail-search-actions{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#7185a0}.mail-search-actions span{flex:1}.mail-search-actions button{display:flex;align-items:center;gap:3px;background:#edf3ff;color:#285fb7;padding:5px 7px;border-radius:5px;font-size:11px}.mail-search-actions button:disabled{opacity:.5;cursor:default}.search-folder{display:block;font-size:10px;color:#5677a6;margin-top:5px}.list-subline{overflow-wrap:anywhere}
+
+/* Keep row actions in their own columns, outside the message text. */
+.message-row-wrap{display:grid;grid-template-columns:minmax(0,1fr)44px;border-bottom:1px solid #edf1f6;background:#fff}
+.message-row-wrap:has(.message-row.selected){background:#f0f5ff}
+.message-row-wrap .message-row{min-width:0;border-bottom:0;padding-right:8px}
+.message-row-wrap>.star-button{position:static;align-self:center;justify-self:center;width:40px;height:44px}
+.message-row-wrap .row-meta{position:static;flex:none;align-self:flex-end;gap:6px;min-height:18px}
+.message-row-wrap .row-preview{padding-right:0}
+.star-button.is-starred{color:#b67a08}.star-button:hover{background:#fff5d9}.star-button:disabled{opacity:.5;cursor:wait}
+.search-folder{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-header{flex-shrink:0}.list-title-row>div{min-width:0}.list-title-row h1{overflow-wrap:anywhere}
+.mail-search-actions{flex-wrap:wrap}.mail-search-actions span{min-width:110px}.mail-search-actions button{min-height:32px}
+.reader-toolbar{height:auto;min-height:70px;gap:8px;padding:12px 24px;flex-wrap:wrap}
+.toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-left:auto}
+.toolbar-actions>.icon-button,.reader-back{width:40px;height:44px;flex:none}
+.toolbar-actions>.secondary{min-height:44px;white-space:nowrap}
+.message-heading h1,.sender-details,.attachment-chip strong{overflow-wrap:anywhere}
+.message-heading-meta{flex-wrap:wrap;gap:10px}.attachment-chip{min-width:0;max-width:100%}.attachment-chip span:nth-child(2){min-width:0}
+.toast{max-width:calc(100vw - 32px);overflow-wrap:anywhere}.toast>svg,.toast>button{flex:none}
+@media(max-width:1000px){
+ .main-grid{display:block;position:relative}.list-pane{height:100%}
+ .list-pane.has-open-message{display:none}.reading-pane{display:none;position:absolute;inset:0;z-index:4}
+ .reading-pane.reader-open{display:block}.reader-back{display:grid}.reader-toolbar-label{display:none}
+}
+@media(max-width:650px){
+ .reader-toolbar{padding:8px 12px;min-height:60px}.toolbar-actions{gap:4px}
+ .reader-toolbar .secondary{padding:8px;font-size:11px}
+ .list-header{padding-bottom:16px}.mobile-list-brand{margin-bottom:20px}
+ .message-row-wrap .message-row{padding-left:16px}.list-subline{font-size:11px}
+}
+@media(max-width:420px){
+ .move-message-label{display:none}.toolbar-actions>.secondary{width:44px;justify-content:center}
+ .toolbar-actions>.icon-button,.reader-back{width:44px}.reader-toolbar{flex-wrap:nowrap}
+}
