@@ -15,7 +15,7 @@ for(const source of ['inbox','sent'])it(`moves ${source} mail only after success
  vi.spyOn(api,'mailboxes').mockImplementation(async()=>['inbox','sent','trash'].map(role=>({id:role,name:role,role,unreadCount:0,totalCount:membership===role?1:0})))
  vi.spyOn(api,'messages').mockImplementation(async box=>({messages:box===membership?[message()]:[]}))
  vi.spyOn(api,'message').mockImplementation(async()=>message())
- const move=vi.spyOn(api,'moveMessage').mockRejectedValueOnce(new ApiError('UPSTREAM_UNAVAILABLE','Move failed.',503)).mockImplementation(async(id,action)=>{membership=action==='trash'?'trash':'inbox';return {id,mailboxIds:[membership]}})
+ const move=vi.spyOn(api,'moveMessage').mockRejectedValueOnce(new ApiError('UPSTREAM_UNAVAILABLE','Move failed.',503)).mockImplementation(async(id,action)=>{membership=action==='trash'?'trash':source;return {id,mailboxIds:[membership]}})
  const mount=(path:string)=>{
   const client=new QueryClient({defaultOptions:{queries:{retry:false}}})
   const view=render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><App/></MemoryRouter></QueryClientProvider>)
@@ -36,8 +36,9 @@ for(const source of ['inbox','sent'])it(`moves ${source} mail only after success
  unmount()
  // Fresh component tree and query cache must retrieve the persisted membership.
  unmount=mount('/mail/trash/E1')
- fireEvent.click(await screen.findByRole('button',{name:'Restore to Inbox'}))
- await screen.findByText('Message restored to Inbox.')
- expect(move).toHaveBeenLastCalledWith('E1','restore');expect(membership).toBe('inbox')
+ fireEvent.click(await screen.findByRole('button',{name:'Restore'}))
+ await screen.findByText(`Message restored to ${source==='sent'?'Sent':'Inbox'}.`)
+ await screen.findByText('No messages in Trash')
+ expect(move).toHaveBeenLastCalledWith('E1','restore');expect(membership).toBe(source)
  unmount()
 })

@@ -56,3 +56,5 @@
  .move-message-label{display:none}.toolbar-actions>.secondary{width:44px;justify-content:center}
  .toolbar-actions>.icon-button,.reader-back{width:44px}.reader-toolbar{flex-wrap:nowrap}
 }
+
+.mail-search-clear{display:flex;align-items:center;justify-content:center;flex:0 0 32px;min-height:36px;padding:0;background:transparent;color:#7185a0;border-radius:5px}.mail-search-clear:hover{background:#edf3ff;color:#285fb7}
