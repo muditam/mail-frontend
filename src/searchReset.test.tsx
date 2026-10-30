@@ -6,6 +6,7 @@ import {MemoryRouter,useLocation} from 'react-router-dom'
 import App from './App'
 import {MailSearch} from './MailSearch'
 import {api} from './api'
+import {ApiError} from './types'
 
 afterEach(()=>{cleanup();vi.restoreAllMocks()})
 function Location(){const location=useLocation();return <output data-testid="location">{location.pathname+location.search}</output>}
@@ -35,4 +36,18 @@ it('keeps typing separate from applied search and supports clearing unsubmitted 
  expect(search).toHaveBeenCalledWith('new text')
  fireEvent.click(screen.getByRole('button',{name:'Clear search text'}))
  expect(clear).toHaveBeenCalledTimes(1);expect(input).toHaveProperty('value','');expect(document.activeElement).toBe(input)
+})
+
+it('shows failed search as unavailable rather than zero matches',async()=>{
+ vi.spyOn(api,'session').mockResolvedValue({user:{email:'user@example.test'},csrfToken:'csrf'})
+ vi.spyOn(api,'mailboxes').mockResolvedValue([{id:'inbox',name:'Inbox',role:'inbox',totalCount:10,unreadCount:0}])
+ vi.spyOn(api,'messages').mockRejectedValue(new ApiError('INVALID_REQUEST','Invalid request.',400))
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}})
+ render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/mail/inbox?q=Hi']}><App/></MemoryRouter></QueryClientProvider>)
+ await screen.findByText('Invalid request.')
+ expect(screen.getByText('Search unavailable')).toBeTruthy()
+ expect(screen.queryByText('0 results')).toBeNull()
+ expect(screen.queryByText('No matching messages')).toBeNull()
+ expect(screen.getByRole('heading',{name:'Search results—'})).toBeTruthy()
+ cleanup();client.clear()
 })
