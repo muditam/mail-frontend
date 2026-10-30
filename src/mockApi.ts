@@ -22,6 +22,7 @@ let messages: Message[] = [
   { id: 'm8', mailboxIds: ['sent'], from:[{email:user}], to:[{name:'Daniel Kim',email:'daniel@aperture.co'}], subject:'Partnership details', preview:'Here’s the outline we discussed.', receivedAt:hours(52), isRead:true, hasAttachment:false, bodyText:'Hi Daniel,\n\nHere’s the outline we discussed.\n\nAlex', attachments:[] },
   { id: 'd1', keywords:{'$draft':true}, mailboxIds: ['drafts'], from:[{email:user}], to:[{email:'hello@kinfolk.co'}], subject:'Introduction', preview:'Hi there, I wanted to reach out...', receivedAt:hours(4), isRead:true, hasAttachment:false, bodyText:'Hi there,\n\nI wanted to reach out...', attachments:[] },
 ]
+const trashOrigins=new Map<string,string>()
 let next = 10
 const ensure = () => { if (!signedIn) throw new ApiError('SESSION_EXPIRED', 'Please sign in again.', 401) }
 const session = (): Session => ({ user: { email:user, displayName:'Alex Morgan' }, csrfToken:'mock-csrf' })
@@ -45,8 +46,13 @@ export const mockApi = {
     ensure(); await delay();
     const message=messages.find(m=>m.id===id);
     if(!message)throw new ApiError('MESSAGE_NOT_FOUND','Message not found.',404);
-    if(action==='trash')message.mailboxIds=['trash'];
-    else if(message.mailboxIds.includes('trash'))message.mailboxIds=[message.keywords?.['$draft']?'drafts':'inbox'];
+    if(action==='trash'&&!message.mailboxIds.includes('trash')){
+      trashOrigins.set(id,message.mailboxIds.includes('sent')?'sent':message.keywords?.['$draft']?'drafts':'inbox');
+      message.mailboxIds=['trash'];
+    }else if(action==='restore'&&message.mailboxIds.includes('trash')){
+      message.mailboxIds=[trashOrigins.get(id)||(message.keywords?.['$draft']?'drafts':'inbox')];
+      trashOrigins.delete(id);
+    }
     mailboxes=mailboxes.map(box=>({...box,totalCount:messages.filter(m=>m.mailboxIds.includes(box.id)).length,unreadCount:messages.filter(m=>m.mailboxIds.includes(box.id)&&!m.isRead).length}));
     return {id,mailboxIds:[...message.mailboxIds]};
   },
