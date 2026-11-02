@@ -22,7 +22,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const envelope = await response.json().catch(() => null)
     const error = envelope?.error
     if (response.status === 401 && path !== '/auth/session' && path !== '/auth/login') onExpired?.()
-    throw new ApiError(error?.code || (response.status === 401 ? 'SESSION_EXPIRED' : 'UPSTREAM_UNAVAILABLE'), error?.message || 'Something went wrong. Please try again.', response.status)
+    throw new ApiError(error?.code || (response.status === 401 ? 'SESSION_EXPIRED' : 'UPSTREAM_UNAVAILABLE'), error?.message || 'Something went wrong. Please try again.', response.status, error?.details)
   }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>
 }
@@ -57,6 +57,6 @@ const liveApi = {
   },
   saveDraft: (payload: DraftPayload) => request<{draftId: string}>('/drafts', { method: 'POST', body: JSON.stringify(payload) }),
   deleteDraft: (id: string) => request<void>(`/drafts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  send: (payload: DraftPayload) => request<{submissionId: string; status: 'queued'}>('/messages/send', { method: 'POST', body: JSON.stringify(payload) }),
+  send: (payload: DraftPayload) => request<{submissionId: string; status: 'queued'|'retrying';messageId?:string;failedRecipients?:number}>('/messages/send', { method: 'POST', body: JSON.stringify(payload) }),
 }
 export const api = mock ? mockApi : liveApi
