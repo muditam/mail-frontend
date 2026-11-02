@@ -22,7 +22,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const envelope = await response.json().catch(() => null)
     const error = envelope?.error
     if (response.status === 401 && path !== '/auth/session' && path !== '/auth/login') onExpired?.()
-    throw new ApiError(error?.code || (response.status === 401 ? 'SESSION_EXPIRED' : 'UPSTREAM_UNAVAILABLE'), error?.message || 'Something went wrong. Please try again.', response.status)
+    throw new ApiError(error?.code || (response.status === 401 ? 'SESSION_EXPIRED' : 'UPSTREAM_UNAVAILABLE'), error?.message || 'Something went wrong. Please try again.', response.status, error?.details)
   }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>
 }

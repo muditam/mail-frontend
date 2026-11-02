@@ -8,4 +8,4 @@ export type Message = MessageSummary & { to: Address[]; cc?: Address[]; bcc?: Ad
 export type MessagePage = { messages: MessageSummary[]; nextCursor?: string }
 export type DraftPayload = { draftId?: string; to: string[]; cc?: string[]; bcc?: string[]; subject: string; bodyText: string; attachmentIds: string[] }
 export type ApiErrorCode = 'INVALID_CREDENTIALS'|'MFA_REQUIRED'|'SESSION_EXPIRED'|'CSRF_FAILED'|'MAILBOX_NOT_FOUND'|'MESSAGE_NOT_FOUND'|'DRAFT_NOT_FOUND'|'ATTACHMENT_NOT_FOUND'|'ATTACHMENT_TOO_LARGE'|'INVALID_REQUEST'|'SEND_REJECTED'|'SEND_STATUS_UNKNOWN'|'RATE_LIMITED'|'UPSTREAM_UNAVAILABLE'
-export class ApiError extends Error { constructor(public code: ApiErrorCode|string, message: string, public status = 0) { super(message); this.name = 'ApiError' } }
+export class ApiError extends Error { constructor(public code: ApiErrorCode|string, message: string, public status = 0, public details?: {draftId?:string}) { super(message); this.name = 'ApiError' } }
