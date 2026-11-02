@@ -35,3 +35,9 @@ it('accepted send fires success only after the request resolves',async()=>{
  resolve({submissionId:'S1',status:'queued'})
  await waitFor(()=>expect(done).toHaveBeenCalledWith('Message sent.'))
 })
+it('automatic retry acceptance closes composer with delayed notice, not Message sent',async()=>{
+ vi.spyOn(api,'send').mockResolvedValue({submissionId:'S1',status:'retrying',messageId:'D2',failedRecipients:0})
+ const {done}=setup();fireEvent.click(screen.getByRole('button',{name:'Send'}))
+ await waitFor(()=>expect(done).toHaveBeenCalledWith('Delivery delayed. Retrying automatically; do not resend.'))
+ expect(done).not.toHaveBeenCalledWith('Message sent.')
+})

@@ -13,7 +13,7 @@ for(const source of ['inbox','sent'])it(`moves ${source} mail only after success
  const message=()=>({id:'E1',mailboxIds:[membership],from:[{email:'sender@example.test'}],to:[{email:'recipient@example.test'}],subject:'Keep this message',preview:'Content',bodyText:'Unchanged content',receivedAt:'2026-10-28T12:00:00Z',isRead:true,keywords:{'$seen':true},attachments:[],hasAttachment:false} as Message)
  vi.spyOn(api,'session').mockResolvedValue({user:{email:'user@example.test'},csrfToken:'csrf'})
  vi.spyOn(api,'mailboxes').mockImplementation(async()=>['inbox','sent','trash'].map(role=>({id:role,name:role,role,unreadCount:0,totalCount:membership===role?1:0})))
- vi.spyOn(api,'messages').mockImplementation(async box=>({messages:box===membership?[message()]:[]}))
+ vi.spyOn(api,'messages').mockImplementation(async (...args:Parameters<typeof api.messages>)=>({messages:args[0]===membership?[message()]:[]}))
  vi.spyOn(api,'message').mockImplementation(async()=>message())
  const move=vi.spyOn(api,'moveMessage').mockRejectedValueOnce(new ApiError('UPSTREAM_UNAVAILABLE','Move failed.',503)).mockImplementation(async(id,action)=>{membership=action==='trash'?'trash':source;return {id,mailboxIds:[membership]}})
  const mount=(path:string)=>{

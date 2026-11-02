@@ -57,6 +57,6 @@ const liveApi = {
   },
   saveDraft: (payload: DraftPayload) => request<{draftId: string}>('/drafts', { method: 'POST', body: JSON.stringify(payload) }),
   deleteDraft: (id: string) => request<void>(`/drafts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  send: (payload: DraftPayload) => request<{submissionId: string; status: 'queued'}>('/messages/send', { method: 'POST', body: JSON.stringify(payload) }),
+  send: (payload: DraftPayload) => request<{submissionId: string; status: 'queued'|'retrying';messageId?:string;failedRecipients?:number}>('/messages/send', { method: 'POST', body: JSON.stringify(payload) }),
 }
 export const api = mock ? mockApi : liveApi
