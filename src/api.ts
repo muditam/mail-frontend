@@ -21,6 +21,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const envelope = await response.json().catch(() => null)
     const error = envelope?.error
+    if(error?.code==='PASSWORD_CHANGE_REQUIRED')window.dispatchEvent(new Event('password-setup-required'))
     if (response.status === 401 && path !== '/auth/session' && path !== '/auth/login') onExpired?.()
     throw new ApiError(error?.code || (response.status === 401 ? 'SESSION_EXPIRED' : 'UPSTREAM_UNAVAILABLE'), error?.message || 'Something went wrong. Please try again.', response.status, error?.details)
   }
@@ -28,6 +29,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 const liveApi = {
+  passwordSetup: (currentPassword:string,newPassword:string) => request<{status:string}>('/auth/password-setup',{method:'POST',body:JSON.stringify({currentPassword,newPassword})}),
   session: () => request<Session>('/auth/session'),
   login: (email: string, password: string) => request<Session>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),

@@ -28,6 +28,7 @@ const ensure = () => { if (!signedIn) throw new ApiError('SESSION_EXPIRED', 'Ple
 const session = (): Session => ({ user: { email:user, displayName:'Alex Morgan' }, csrfToken:'mock-csrf' })
 const delay = async () => new Promise(resolve => setTimeout(resolve, 260))
 export const mockApi = {
+  passwordSetup: async (_currentPassword:string,_newPassword:string):Promise<{status:string}> => {throw new ApiError('PASSWORD_SETUP_UNAVAILABLE','Password setup requires the live backend.')},
   async session() { await delay(); ensure(); return session() },
   async login(email: string, password: string) { await delay(); if (!email || !password) throw new ApiError('INVALID_CREDENTIALS','Email or password is incorrect.',401); user=email; signedIn=true; return session() },
   async logout() { signedIn=false; await delay() },

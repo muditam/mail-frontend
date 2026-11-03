@@ -1,7 +1,7 @@
 export type DeliveryRetry = {state:'waiting'|'working'|'dispatching'|'completed'|'failed'|'attention';attempts:number;nextAttemptAt?:string;pending:number;failed:number;accepted:number}
 export type Address = { email: string; name?: string }
 export type User = { email: string; displayName?: string }
-export type Session = { user: User; csrfToken: string }
+export type Session = { passwordChangeRequired?:boolean; user: User; csrfToken: string }
 export type Mailbox = { id: string; name: string; role?: string; unreadCount: number; totalCount: number }
 export type Attachment = { id: string; name: string; type: string; size: number }
 export type MessageSummary = { deliveryRetry?:DeliveryRetry; id: string; mailboxIds: string[]; from: Address[]; to?: Address[]; subject: string; preview: string; receivedAt: string; isRead: boolean; hasAttachment: boolean; keywords?: Record<string, boolean> }
