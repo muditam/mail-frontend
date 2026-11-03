@@ -62,3 +62,5 @@
 .action-tooltip{position:fixed;z-index:1000;max-width:min(280px,calc(100vw - 16px));padding:7px 10px;border-radius:6px;background:#172b4d;color:#fff;font-size:12px;line-height:1.4;overflow-wrap:anywhere;box-shadow:0 3px 12px #172b4d26;pointer-events:none}
 
 .delivery-retry-notice { padding: 14px 16px; margin: 16px 0; border: 1px solid #d6b570; border-radius: 10px; background: #fff9ed; color: #694b18; line-height: 1.5; overflow-wrap: anywhere; }
+
+.password-setup-page{min-height:100dvh;display:grid;place-items:center;padding:24px;background:#f5f7fc}.password-setup-card{width:min(100%,520px)}.password-setup-card h1{font-size:26px}.password-setup-card input{width:100%}.password-setup-card p{font-size:13px;line-height:1.6;overflow-wrap:anywhere}.password-setup-card .notice{margin-top:18px}.setup-logout{display:block;margin:16px auto 0;color:#355d9a;background:transparent;border:0;padding:10px;cursor:pointer}
