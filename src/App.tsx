@@ -1,3 +1,4 @@
+import companyLogo from '../assets/logo.avif'
 import {PasswordSetup} from './PasswordSetup'
 import {DeliveryRetryNotice} from './DeliveryRetryNotice'
 import {TooltipButton} from './TooltipButton'
@@ -53,7 +54,7 @@ function App() {
   </Routes>
 }
 
-function Brand() { return <div className="brand"><span className="brand-mark"><Mail size={20} strokeWidth={2.2}/></span><span><strong>Muditam</strong><small>MAIL</small></span></div> }
+function Brand() { return <div className="brand"><img className="brand-logo" src={companyLogo} width={300} height={60} alt="Muditam"/><small>MAIL</small></div> }
 
 export function Login({onLogin,expired,passwordChanged=false}:{passwordChanged?:boolean;onLogin:(email:string,password:string)=>Promise<void>,expired:boolean}) {
   const [visible,setVisible]=useState(false), [serverError,setServerError]=useState(''), [busy,setBusy]=useState(false)
