@@ -27,14 +27,31 @@ function linkText(text: string): ReactNode[] {
 }
 
 function cleanHtml(html: string): DocumentFragment {
-  return DOMPurify.sanitize(html, {
+  const fragment = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: allowedTags,
-    // No sender CSS, IDs, image URLs, handlers or application-facing attributes.
-    ALLOWED_ATTR: ['href','title','colspan','rowspan','alt'],
+    // Style/hidden are inspected only to discard invisible preheaders below.
+    // Sender styles are never applied to the rendered message.
+    ALLOWED_ATTR: ['href','title','colspan','rowspan','alt','role','style','hidden'],
     ALLOW_DATA_ATTR: false, ALLOW_ARIA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
     FORBID_TAGS: ['script','style','form','input','button','textarea','select','iframe','object','embed','svg','math','template'],
   })
+  for (const element of Array.from(fragment.querySelectorAll('[style],[hidden]'))) {
+    const style = (element as HTMLElement).style
+    if (element.hasAttribute('hidden') || style.getPropertyValue('display').trim().toLowerCase() === 'none' || style.getPropertyValue('visibility').trim().toLowerCase() === 'hidden') element.remove()
+    element.removeAttribute('style'); element.removeAttribute('hidden')
+  }
+  return fragment
+}
+
+// Email authors use nested tables for positioning. Only tables with their own
+// headers/caption are data grids; presentation tables must not acquire grid UI.
+function isLayoutTable(table: Element): boolean {
+  if (['presentation','none'].includes((table.getAttribute('role') || '').trim().toLowerCase())) return true
+  return !Array.from(table.querySelectorAll('th,caption')).some(cell => cell.closest('table') === table)
+}
+function hasReadableContent(element: Element): boolean {
+  return !!element.textContent?.replace(/\u00a0/g, ' ').trim() || Array.from(element.querySelectorAll('img[alt]')).some(image => image.getAttribute('alt')?.trim())
 }
 
 function renderNode(node: Node, key: string, insideLink = false, depth = 0): ReactNode {
@@ -43,6 +60,11 @@ function renderNode(node: Node, key: string, insideLink = false, depth = 0): Rea
   const element = node as Element, tag = element.tagName.toLowerCase()
   // Bound React tree depth; deeper content remains escaped readable text.
   if (depth > 40) return element.textContent
+  if (tag === 'table' && isLayoutTable(element) && !hasReadableContent(element)) return null
+  if (tag === 'tr') {
+    const table = element.closest('table')
+    if (table && isLayoutTable(table) && !hasReadableContent(element)) return null
+  }
   if (tag === 'img') return element.getAttribute('alt') ? <span key={key}>[{element.getAttribute('alt')}]</span> : null
   const children = Array.from(node.childNodes).map((child, index) => renderNode(child, `${key}-${index}`, insideLink || tag === 'a', depth + 1))
   if (tag === 'a') {
@@ -50,6 +72,11 @@ function renderNode(node: Node, key: string, insideLink = false, depth = 0): Rea
     return href ? <a key={key} {...linkProps(href)}>{children}</a> : <span key={key}>{children}</span>
   }
   const props: Record<string, unknown> = {key}
+  if (tag === 'table') {
+    const layout = isLayoutTable(element)
+    props.className = layout ? 'email-layout-table' : 'email-data-table'
+    if (layout) props.role = 'presentation'
+  }
   if (tag === 'td' || tag === 'th') {
     for (const [attr, prop] of [['colspan','colSpan'],['rowspan','rowSpan']]) {
       const value = Number(element.getAttribute(attr))

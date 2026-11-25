@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {afterEach, describe, expect, it} from 'vitest'
+import {readFileSync} from 'node:fs'
 import {cleanup, render, screen} from '@testing-library/react'
 import {MessageBody, messagePlainText} from './MessageBody'
 
@@ -63,4 +64,43 @@ describe('message formatting', () => {
     const text=messagePlainText('', '<p>Hello<br>team</p><p><strong>Next step</strong></p><script>secret()</script>')
     expect(text).toContain('Hello\nteam\n');expect(text).toContain('Next step');expect(text).not.toContain('secret()');expect(text).not.toContain('<p>')
   })
+  it('renders nested email layout tables without grid lines or accumulating wrapper spacing', () => {
+    const style=document.createElement('style')
+    style.textContent=readFileSync('src/styles.css','utf8').replace(/@import[^;]+;/g,'')
+    document.head.append(style)
+    try {
+      const {container}=render(<MessageBody bodyText="" bodyHtml={'<table role="presentation"><tr><td><div><div><table><tr><td><p>Finish setting up your device</p><table><tr><td><a href="https://example.com/setup">Finish setup</a></td></tr></table></td></tr></table></div></div></td></tr></table>'}/>)
+      expect(container.querySelectorAll('table[role="presentation"]')).toHaveLength(3)
+      expect(screen.queryByRole('table')).toBeNull()
+      for(const cell of container.querySelectorAll('td')) {
+        expect(getComputedStyle(cell).padding).toBe('0px')
+        expect(getComputedStyle(cell).borderTopWidth).toBe('0px')
+      }
+      for(const wrapper of container.querySelectorAll('.message-body-html div')) expect(getComputedStyle(wrapper).marginBottom).toBe('0px')
+      expect(screen.getByRole('link',{name:'Finish setup'}).getAttribute('href')).toBe('https://example.com/setup')
+    } finally {style.remove()}
+  })
+  it('keeps a nested data table distinct from the surrounding presentation layout', () => {
+    const {container}=render(<MessageBody bodyText="" bodyHtml={'<table><tr><td><p>Your invoice</p><table><caption>Invoice items</caption><tr><th>Item</th><th>Amount</th></tr><tr><td>Support</td><td>100</td></tr></table></td></tr></table>'}/>)
+    expect(container.querySelectorAll('.email-layout-table')).toHaveLength(1)
+    expect(container.querySelectorAll('.email-data-table')).toHaveLength(1)
+    expect(screen.getByRole('table',{name:'Invoice items'})).toBeTruthy()
+    expect(screen.getAllByRole('columnheader')).toHaveLength(2)
+  })
+  it('removes invisible preheaders and empty table spacers while retaining content and image alt text', () => {
+    const {container}=render(<MessageBody bodyText="" bodyHtml={'<div style="display: none !important">Hidden preview</div><div hidden>Hidden copy</div><div style="visibility:hidden">Hidden tracking text</div><table role="presentation"><tr><td>&nbsp;<br><img src="https://tracker.example.com/pixel"></td></tr><tr><td><p>Verify your email</p><table><tr><td><img alt="Company logo" src="https://example.com/logo.png"></td></tr></table></td></tr></table>'}/>)
+    expect(container.textContent).not.toContain('Hidden')
+    expect(container.textContent).toContain('Verify your email')
+    expect(container.textContent).toContain('[Company logo]')
+    expect(container.querySelectorAll('tr')).toHaveLength(2)
+    expect(container.querySelector('[style],[hidden],img')).toBeNull()
+    expect(messagePlainText('', '<div style="display:none">Hidden preview</div><p>Actual message</p>')).toBe('Actual message')
+  })
+  it('never applies source table borders, dimensions, styling or arbitrary classes', () => {
+    const {container}=render(<MessageBody bodyText="" bodyHtml={'<table role="presentation" class="primary" width="9000" border="50" style="position:fixed;width:9000px;background:url(https://tracker.example.com/pixel)"><tr><td style="padding:900px">Readable content</td></tr></table>'}/>)
+    expect(container.querySelector('table')?.className).toBe('email-layout-table')
+    expect(container.querySelector('[style],[width],[border],.primary')).toBeNull()
+    expect(container.textContent).toBe('Readable content')
+  })
+
 })
